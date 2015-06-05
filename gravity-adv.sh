@@ -9,6 +9,7 @@ piholeIP="127.0.0.1"
 eventHorizion="/etc/dnsmasq.d/adList.conf"
 blacklist=/etc/pihole/blacklist.txt
 whitelist=/etc/pihole/whitelist.txt
+ramdrive=/var/tmp
 
 # Create the pihole resource directory if it doesn't exist.  Future files will be stored here
 if [[ -d /etc/pihole/ ]];then
@@ -59,8 +60,16 @@ fi
 numberOfAdsBlocked=$(cat /tmp/andLight.txt | wc -l | sed 's/^[ \t]*//')
 echo "$numberOfAdsBlocked ad domains blocked."
 
-# Turn the file into a dnsmasq config file
-sudo mv /tmp/andLight.txt $eventHorizion
+
+if [[ -d $ramdrive ]]; then
+	# move file into ram drive for faster performance
+	sudo mv /tmp/andLight.txt $ramdrive/andLight.txt
+	# Turn the file into a dnsmasq conf via symbolic linking
+	sudo ln -s $ramdrive/andLight.txt $eventHorizon
+else
+	# Turn the file into a dnsmasq config file
+	sudo mv /tmp/andLight.txt $eventHorizion
+fi
 
 # Restart DNS
 sudo service dnsmasq restart
